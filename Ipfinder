@@ -1,0 +1,504 @@
+import requests
+import os
+from datetime import datetime
+
+# ==========================================================
+#                    NEOX CYBER
+#                 IP GEOLOCATION TOOL
+# ==========================================================
+
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+MAGENTA = "\033[95m"
+WHITE = "\033[97m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
+
+# IP History
+ip_history = []
+
+
+# ==========================================================
+#                     BANNER
+# ==========================================================
+
+def banner():
+    os.system("clear" if os.name != "nt" else "cls")
+
+    print(CYAN + BOLD + r"""
+╔══════════════════════════════════════════════╗
+║                                              ║
+║              ███╗   ██╗███████╗ ██████╗      ║
+║              ████╗  ██║██╔════╝██╔═══██╗     ║
+║              ██╔██╗ ██║█████╗  ██║   ██║     ║
+║              ██║╚██╗██║██╔══╝  ██║   ██║     ║
+║              ██║ ╚████║███████╗╚██████╔╝     ║
+║              ╚═╝  ╚═══╝╚══════╝ ╚═════╝      ║ 
+║                                              ║
+║              I P  L O C A T O R              ║
+║              G E O  I N T E L                ║
+║                                              ║
+╚══════════════════════════════════════════════╝
+""" + RESET)
+
+    print(
+        YELLOW + BOLD +
+        "                 NeoX\n" +
+        RESET
+    )
+
+    print(
+        WHITE +
+        "             Github: NeoX-Cyber\n" +
+        RESET
+    )
+
+    print(CYAN + "─" * 48 + RESET)
+
+
+# ==========================================================
+#                  COUNTRY FLAGS
+# ==========================================================
+
+COUNTRY_FLAGS = {
+    "Azerbaijan": "🇦🇿",
+    "Turkey": "🇹🇷",
+    "United States": "🇺🇸",
+    "United Kingdom": "🇬🇧",
+    "Germany": "🇩🇪",
+    "France": "🇫🇷",
+    "Russia": "🇷🇺",
+    "Ukraine": "🇺🇦",
+    "Georgia": "🇬🇪",
+    "Armenia": "🇦🇲",
+    "Iran": "🇮🇷",
+    "Iraq": "🇮🇶",
+    "China": "🇨🇳",
+    "Japan": "🇯🇵",
+    "South Korea": "🇰🇷",
+    "India": "🇮🇳",
+    "Canada": "🇨🇦",
+    "Brazil": "🇧🇷",
+    "Australia": "🇦🇺",
+    "Italy": "🇮🇹",
+    "Spain": "🇪🇸",
+    "Netherlands": "🇳🇱",
+    "Sweden": "🇸🇪",
+    "Norway": "🇳🇴",
+    "Finland": "🇫🇮",
+    "Poland": "🇵🇱",
+    "Romania": "🇷🇴",
+    "Switzerland": "🇨🇭",
+}
+
+
+def get_flag(country):
+    return COUNTRY_FLAGS.get(country, "🌍")
+
+
+# ==========================================================
+#                  IP GEOLOCATION
+# ==========================================================
+
+def get_location(ip_address):
+
+    url = f"http://ip-api.com/json/{ip_address}"
+
+    try:
+
+        response = requests.get(
+            url,
+            params={
+                "fields":
+                "status,message,query,country,countryCode,"
+                "regionName,city,zip,lat,lon,isp,org,as,timezone"
+            },
+            timeout=10
+        )
+
+        if response.status_code != 200:
+            print(
+                RED +
+                "\n[-] API connection failed." +
+                RESET
+            )
+            return
+
+        data = response.json()
+
+        if data.get("status") != "success":
+
+            print(
+                RED +
+                f"\n[-] Error: {data.get('message', 'Unknown error')}" +
+                RESET
+            )
+
+            return
+
+        lat = data.get("lat")
+        lon = data.get("lon")
+
+        country = data.get("country", "Unknown")
+        flag = get_flag(country)
+
+        # Google Maps
+        maps_url = f"https://www.google.com/maps?q={lat},{lon}"
+
+        # HTML Google Maps link
+        maps_html = (
+            f'<a href="{maps_url}" target="_blank">'
+            f'Open Location in Google Maps'
+            f'</a>'
+        )
+
+        # Save to history
+        history_entry = {
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "ip": data.get("query"),
+            "country": country,
+            "city": data.get("city"),
+            "lat": lat,
+            "lon": lon
+        }
+
+        ip_history.append(history_entry)
+
+        # ==================================================
+        #                  RESULT
+        # ==================================================
+
+        print(
+            GREEN +
+            BOLD +
+            "\n[+] LOCATION FOUND\n" +
+            RESET
+        )
+
+        print(
+            CYAN +
+            "┌────────────────────────────────────────────┐"
+        )
+
+        print(
+            "│" +
+            BOLD +
+            "             NEOX GEO INFORMATION           " +
+            RESET +
+            CYAN +
+            "│"
+        )
+
+        print(
+            "├────────────────────────────────────────────┤"
+            + RESET
+        )
+
+        print(
+            f"{GREEN}│ IP Address : {data.get('query')}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ Country    : {flag} {country}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ Region     : {data.get('regionName')}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ City       : {data.get('city')}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ ZIP Code   : {data.get('zip')}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ Latitude   : {lat}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ Longitude  : {lon}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ ISP        : {data.get('isp')}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ Organization: {data.get('org')}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ ASN        : {data.get('as')}"
+            f"{RESET}"
+        )
+
+        print(
+            f"{GREEN}│ Timezone   : {data.get('timezone')}"
+            f"{RESET}"
+        )
+
+        print(
+            CYAN +
+            "└────────────────────────────────────────────┘" +
+            RESET
+        )
+
+        # ==================================================
+        #                GOOGLE MAPS
+        # ==================================================
+
+        print(
+            "\n" +
+            YELLOW +
+            BOLD +
+            "[+] Google Maps:" +
+            RESET
+        )
+
+        print(
+            BLUE +
+            maps_url +
+            RESET
+        )
+
+        print(
+            WHITE +
+            "[+] HTML Link:" +
+            RESET
+        )
+
+        print(maps_html)
+
+        print(
+            CYAN +
+            "\n[+] Coordinates: " +
+            RESET +
+            f"{lat}, {lon}"
+        )
+
+    except requests.exceptions.Timeout:
+
+        print(
+            RED +
+            "\n[-] Request timed out." +
+            RESET
+        )
+
+    except requests.exceptions.ConnectionError:
+
+        print(
+            RED +
+            "\n[-] Internet connection error." +
+            RESET
+        )
+
+    except Exception as e:
+
+        print(
+            RED +
+            f"\n[-] Error: {e}" +
+            RESET
+        )
+
+
+# ==========================================================
+#                    IP HISTORY
+# ==========================================================
+
+def show_history():
+
+    if not ip_history:
+
+        print(
+            YELLOW +
+            "\n[!] IP History is empty." +
+            RESET
+        )
+
+        return
+
+    print(
+        CYAN +
+        BOLD +
+        "\n╔══════════════════════════════════════════════╗"
+    )
+
+    print(
+        "║                 IP HISTORY                  ║"
+    )
+
+    print(
+        "╚══════════════════════════════════════════════╝"
+        + RESET
+    )
+
+    for index, item in enumerate(ip_history, start=1):
+
+        flag = get_flag(item["country"])
+
+        print(
+            f"\n{YELLOW}[{index}]{RESET} "
+            f"{item['time']}"
+        )
+
+        print(
+            f"    IP      : {item['ip']}"
+        )
+
+        print(
+            f"    Country : {flag} {item['country']}"
+        )
+
+        print(
+            f"    City    : {item['city']}"
+        )
+
+        print(
+            f"    Coords  : {item['lat']}, {item['lon']}"
+        )
+
+        print(
+            f"    Maps    : "
+            f"https://www.google.com/maps?"
+            f"q={item['lat']},{item['lon']}"
+        )
+
+
+# ==========================================================
+#                       MENU
+# ==========================================================
+
+def main():
+
+    while True:
+
+        banner()
+
+        print(
+            GREEN +
+            BOLD +
+            "\n[1] Locate IP" +
+            RESET
+        )
+
+        print(
+            CYAN +
+            "[2] IP History" +
+            RESET
+        )
+
+        print(
+            RED +
+            "[3] Exit" +
+            RESET
+        )
+
+        print(
+            CYAN +
+            "\n" +
+            "─" * 48 +
+            RESET
+        )
+
+        choice = input(
+            GREEN +
+            "[NeoX] Select option: " +
+            RESET
+        ).strip()
+
+        # --------------------------------------------------
+        # Locate
+        # --------------------------------------------------
+
+        if choice == "1":
+
+            ip = input(
+                GREEN +
+                "\n[>] Enter IP address: " +
+                RESET
+            ).strip()
+
+            if not ip:
+
+                print(
+                    RED +
+                    "[-] IP address cannot be empty." +
+                    RESET
+                )
+
+                input("\nPress Enter...")
+
+                continue
+
+            get_location(ip)
+
+            input(
+                YELLOW +
+                "\nPress Enter to continue..." +
+                RESET
+            )
+
+        # --------------------------------------------------
+        # History
+        # --------------------------------------------------
+
+        elif choice == "2":
+
+            show_history()
+
+            input(
+                YELLOW +
+                "\nPress Enter to continue..." +
+                RESET
+            )
+
+        # --------------------------------------------------
+        # Exit
+        # --------------------------------------------------
+
+        elif choice == "3":
+
+            print(
+                CYAN +
+                "\n[+] NeoX shutting down..." +
+                RESET
+            )
+
+            break
+
+        else:
+
+            print(
+                RED +
+                "\n[-] Invalid option." +
+                RESET
+            )
+
+            input(
+                YELLOW +
+                "\nPress Enter..." +
+                RESET
+            )
+
+
+# ==========================================================
+#                       START
+# ==========================================================
+
+if __name__ == "__main__":
+    main()
